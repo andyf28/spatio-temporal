@@ -24,34 +24,36 @@ class DataLoader:
         return self.df
 
 file_paths = [
-    "~/Desktop/spatio-temporal/Parquet/yellow_tripdata_2024-01.parquet",
-    "~/Desktop/spatio-temporal/Parquet/yellow_tripdata_2024-02.parquet",
-    "~/Desktop/spatio-temporal/Parquet/yellow_tripdata_2024-03.parquet",
-    "~/Desktop/spatio-temporal/Parquet/yellow_tripdata_2024-04.parquet",
-    "~/Desktop/spatio-temporal/Parquet/yellow_tripdata_2024-05.parquet",
-    "~/Desktop/spatio-temporal/Parquet/yellow_tripdata_2024-06.parquet",
-    "~/Desktop/spatio-temporal/Parquet/yellow_tripdata_2024-07.parquet",
-    "~/Desktop/spatio-temporal/Parquet/yellow_tripdata_2024-08.parquet",
-    "~/Desktop/spatio-temporal/Parquet/yellow_tripdata_2024-09.parquet",
-    "~/Desktop/spatio-temporal/Parquet/yellow_tripdata_2024-10.parquet",
-    "~/Desktop/spatio-temporal/Parquet/yellow_tripdata_2024-11.parquet"
+    "./Parquet/yellow_tripdata_2024-01.parquet",
+    "./Parquet/yellow_tripdata_2024-02.parquet",
+    "./Parquet/yellow_tripdata_2024-03.parquet",
+    "./Parquet/yellow_tripdata_2024-04.parquet",
+    "./Parquet/yellow_tripdata_2024-05.parquet",
+    "./Parquet/yellow_tripdata_2024-06.parquet",
+    "./Parquet/yellow_tripdata_2024-07.parquet",
+    "./Parquet/yellow_tripdata_2024-08.parquet",
+    "./Parquet/yellow_tripdata_2024-09.parquet",
+    "./Parquet/yellow_tripdata_2024-10.parquet",
+    "./Parquet/yellow_tripdata_2024-11.parquet"
 ]
 
 data_loader = DataLoader(file_paths)
 df = data_loader.get_dataframe()
-#print(df.tail(20))
+#print(df.tail(20)) #shows if most recent parquet has been added
 
 # uncomment to save merged df to csv
-#output_path = "~/Desktop/spatio-temporal/combined_tripdata_2024.parquet"
-#data_loader.export_to_parquet(output_path)
+#output_path = "./combined_tripdata_2024.csv"
+#df.to_csv(output_path)
 
 geojson_path = os.path.expanduser("./tlc_taxi_zones.geojson")
 taxi_zones = gpd.read_file(geojson_path)
 
-# ensures location_id is treated as an integer
-taxi_zones["location_id"] = taxi_zones["location_id"].astype(int)
+# Convert location IDs to string type for consistent mapping
+taxi_zones['location_id'] = taxi_zones['location_id'].astype(str)
+df['PULocationID'] = df['PULocationID'].astype(str)
+df['DOLocationID'] = df['DOLocationID'].astype(str)
 
-# merges for pickup location
-df = df.merge(taxi_zones[["location_id", "geometry", "zone", "borough"]],
-              left_on = "PULocationID", right_on = "location_id", how = "left", suffixed = ("", "_PU"))
-
+# Create the lookup dictionary and map geometries
+geometry_lookup = dict(zip(taxi_zones['location_id'], taxi_zones['geometry']))
+df['PUjson'] = df['PULocationID'].map(geometry_lookup)
+df['DOjson'] = df['DOLocationID'].map(geometry_lookup)
