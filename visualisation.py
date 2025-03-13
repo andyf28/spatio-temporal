@@ -77,8 +77,13 @@ class PUTaxiZoneVisualiser:
         self.processed_data = None
 
     def process_zone_data(self):
+        # Calculate the number of unique days in the dataset
+        num_days = len(pd.to_datetime(self.df['tpep_pickup_datetime']).dt.date.unique())
+        
         # counts pickups per zone and creates gdf
         zone_counts = self.df.groupby('PULocationID').size().reset_index(name='pickup_count')
+        # Convert to average daily pickups
+        zone_counts['pickup_count'] = zone_counts['pickup_count'] / num_days
         zone_counts['PULocationID'] = zone_counts['PULocationID'].astype(str)
         
         # creates gdf using existing geometry
@@ -90,7 +95,7 @@ class PUTaxiZoneVisualiser:
         self.processed_data['pickup_count'] = self.processed_data['pickup_count'].fillna(0)
         return self
 
-    def plot_zone_heatmap(self, title="Total Taxi Pickups by Zone (2024)", save_path=None):
+    def plot_zone_heatmap(self, title="Average Daily Taxi Pickups by Zone (2024)", save_path=None):
         if self.processed_data is None:
             raise ValueError("Process data first")
 
@@ -101,8 +106,8 @@ class PUTaxiZoneVisualiser:
             column='pickup_count',
             ax=ax,
             legend=True,
-            legend_kwds={'label': 'Number of Pickups'},
-            cmap='YlOrRd'
+            legend_kwds={'label': 'Average Daily Pickups'},
+            cmap='cividis'
         )
         
         plt.title(title)
@@ -123,8 +128,13 @@ class DOTaxiZoneVisualizer:
         self.processed_data = None
 
     def process_zone_data(self):
-        # Count dropoffs per zone and create GeoDataFrame
+        # calculates the number of unique days in the dataset
+        num_days = len(pd.to_datetime(self.df['tpep_pickup_datetime']).dt.data.uniquie())
+
+        # counts pikcups per one and creates gdf
         zone_counts = self.df.groupby('DOLocationID').size().reset_index(name='dropoff_count')
+        # converts to average daily pickups
+        zone_counts['drop'] = zone_counts['dropoff_count'] / num_days
         zone_counts['DOLocationID'] = zone_counts['DOLocationID'].astype(str)
         
         # Create GeoDataFrame using existing geometry
@@ -148,7 +158,7 @@ class DOTaxiZoneVisualizer:
             ax=ax,
             legend=True,
             legend_kwds={'label': 'Number of Dropoffs'},
-            cmap='YlOrRd'
+            cmap='cividis'
         )
         
         plt.title(title)
@@ -174,20 +184,20 @@ def main():
     # create weekly demand heatmap
     #weekly_visualiser = WeeklyDemandVisualiser(df)
     #weekly_visualiser.process_weekly_demand()
-    #plt_weekly = weekly_visualiser.plot_heatmap(save_path='./plots/weekly_demand_heatmap.png')
+    #plt_weekly = weekly_visualiser.plot_heatmap(save_path='./plots/hourly_demand_heatmap.png')
     #plt_weekly.show()
     
     # create pickups zone heatmap 
-    #zone_visualiser = PUTaxiZoneVisualiser(df) 
-    #zone_visualiser.process_zone_data()
-    #plt_zone = zone_visualiser.plot_zone_heatmap(save_path='./plots/zone_pickup_heatmap.png')
-    #plt_zone.show()
+    zone_visualiser = PUTaxiZoneVisualiser(df) 
+    zone_visualiser.process_zone_data()
+    plt_zone = zone_visualiser.plot_zone_heatmap(save_path='./plots/zone_pickup_heatmap.png')
+    plt_zone.show()
 
     # Create dropoffs zone heatmap
-    dropoff_visualizer = DOTaxiZoneVisualizer(df)
-    dropoff_visualizer.process_zone_data()
-    plt_dropoff = dropoff_visualizer.plot_zone_heatmap(save_path='./plots/zone_dropoff_heatmap.png')
-    plt_dropoff.show()
+    #dropoff_visualizer = DOTaxiZoneVisualizer(df)
+    #dropoff_visualizer.process_zone_data()
+    #plt_dropoff = dropoff_visualizer.plot_zone_heatmap(save_path='./plots/zone_dropoff_heatmap.png')
+    #plt_dropoff.show()
 
 if __name__ == "__main__":
     main()
