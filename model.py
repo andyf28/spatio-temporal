@@ -106,7 +106,8 @@ class TaxiDemandForecast:
             learning_rate=0.05,
             max_depth=6,
             subsample=0.8,
-            early_stopping_rounds=50
+            early_stopping_rounds=50,
+            device = "gpu"
         )
 
         with tqdm(total=1, desc="Training model") as pbar:
