@@ -6,7 +6,7 @@
 ### geojson files:
 - https://www.kaggle.com/datasets/mxruedag/tlc-nyc-taxi-zones?resource=download
 
-TODO: MAKE SURE TO OPTIMISE MODEL.PY TO RUN DATA ON GPU NOT CPU SO THAT XGBOOST DOESNT HAVE TO TRANSFER DATA FILE FROM CPU TO GPU WHEN PREDICTING
+TODO: filter geojson to load in only manhattan zones, and predict for pickup and drop off locations. do some temporal heatmaps and heatmaps for predicted data
 
 Manhattan tlc zones reference: https://www.researchgate.net/figure/Taxi-zone-division-of-Manhattan-by-taxi-and-limousine-commission-of-New-York-City-We_fig2_351834141
 
