@@ -134,7 +134,7 @@ class TaxiDemandForecast:
         print("Generating predictions for 2025 for specified taxi zones...")
 
         # Define locations for prediction. You can add more zones as needed.
-        locations = [100]
+        locations = [100, 236, 68, 237, 166]
 
         # Generate future dates for prediction
         future_dates = pd.date_range(start='2025-01-01 00:00:00',
