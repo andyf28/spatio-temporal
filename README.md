@@ -10,3 +10,5 @@ TODO: filter geojson to load in only manhattan zones, and predict for pickup and
 
 Manhattan tlc zones reference: https://www.researchgate.net/figure/Taxi-zone-division-of-Manhattan-by-taxi-and-limousine-commission-of-New-York-City-We_fig2_351834141
 
+
+TODO: reference the code for xgboost
