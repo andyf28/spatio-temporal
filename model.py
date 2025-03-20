@@ -130,35 +130,38 @@ class TaxiDemandForecast:
         print(f"Root Mean Squared Error (RMSE): {rmse:.2f}")
 
     def visualise_predictions(self):
-        """Creates a heatmap of predicted average daily taxi pickups for 2025"""
-        print("Generating predictions for 2025...")
-        
-        # Get unique locations
-        locations = self.df['PULocationID'].unique()
-        
-        # Generate future dates for 2025 (hourly)
-        future_dates = pd.date_range(start='2025-01-01 00:00:00', 
-                                     end='2025-12-31 23:00:00', freq='h')
-        
-        # Check if future_dates is empty
+        """Predicts average daily taxi pickups for each specified taxi zone in 2025"""
+        print("Generating predictions for 2025 for specified taxi zones...")
+
+        # Define locations for prediction. You can add more zones as needed.
+        locations = [100]
+
+        # Generate future dates for prediction
+        future_dates = pd.date_range(start='2025-01-01 00:00:00',
+                                     end='2025-12-31 23:59:59', freq='h')
         if len(future_dates) == 0:
-            print("Error: No future dates generated. Check the date range.")
+            print("Error: No future dates generated. Check date range")
             return
-        
+
         print(f"Predicting for {len(future_dates)} hours from {future_dates[0]} to {future_dates[-1]}")
-        
-        # Get location columns from X_train for one-hot encoding
+
+        # Get one-hot encoded location columns from training data
         loc_columns = [col for col in self.X_train.columns if col.startswith('loc_')]
-        
-        predictions = []
-        
-        # Predict for each location
+
+        # Dictionary to store predictions per location
+        loc_avg_daily = {}
+
+        # Iterate over locations with a progress bar
         for loc in tqdm(locations, desc="Predicting for locations"):
+            if loc not in self.df['PULocationID'].unique():
+                print(f"Zone {loc} is not present in the data")
+                continue
+
             # Get historical data for this location
             df_loc = self.df[self.df['PULocationID'] == loc].copy()
             df_loc = df_loc.sort_values('tpep_pickup_datetime')
             trip_counts = df_loc['trip_count'].tolist()
-            
+
             # Forecast for each future date in 2025
             for future_date in future_dates:
                 # Time-based features
@@ -166,14 +169,13 @@ class TaxiDemandForecast:
                 dayofweek = future_date.dayofweek
                 month = future_date.month
                 is_weekend = int(dayofweek >= 5)
-                
-                # Lag features (using last known values from training data)
+
+                # Lag features (using most recent known values and previous predictions)
                 lag1 = trip_counts[-1] if trip_counts else 0
                 lag7 = trip_counts[-7] if len(trip_counts) >= 7 else 0
-                rolling_avg = sum(trip_counts[-7:]) / 7 if len(trip_counts) >= 7 else \
-                              (sum(trip_counts) / len(trip_counts) if trip_counts else 0)
-                
-                # Create feature dictionary
+                rolling_avg = (sum(trip_counts[-7:]) / 7) if len(trip_counts) >= 7 else (
+                              sum(trip_counts) / len(trip_counts) if trip_counts else 0)
+
                 features = {
                     'hour': hour,
                     'dayofweek': dayofweek,
@@ -183,39 +185,40 @@ class TaxiDemandForecast:
                     'trip_count_lag7': lag7,
                     'rolling_avg': rolling_avg
                 }
-                
-                # Add one-hot encoded location
+
+                # One-hot encode location features
                 for col in loc_columns:
                     features[col] = 1 if col == f'loc_{loc}' else 0
-                
-                # Convert to DataFrame with same columns as X_train
+
                 feature_df = pd.DataFrame([features], columns=self.X_train.columns)
-                
-                # Predict trip count
+
+                # Predict trip count and append prediction for next iteration
                 pred = self.model.predict(feature_df)[0]
                 trip_counts.append(pred)
-            
-            # Calculate average hourly prediction for 2025
+
+            # Calculate average hourly prediction over the forecast period and compute daily total
             mean_pred_hourly = sum(trip_counts[-len(future_dates):]) / len(future_dates)
-            
-            # Convert to average daily pickups (multiply by 24 hours)
             mean_pred_daily = mean_pred_hourly * 24
-            
-            predictions.append({'PULocationID': loc, 'pred_trip_count': mean_pred_daily})
-        
-        # Create DataFrame from predictions
-        pred_df = pd.DataFrame(predictions)
-        
-        # Merge with geojson for plotting
-        heatmap_data = self.nyc_zones.merge(pred_df, left_on='location_id', right_on='PULocationID')
-        
-        # Plot the heatmap
+            print(f"Predicted avg daily pickups for zone {loc}: {mean_pred_daily:.2f}")
+            loc_avg_daily[loc] = mean_pred_daily
+
+        # Create predictions DataFrame and merge with geojson to produce a heatmap
+        pred_df = pd.DataFrame(list(loc_avg_daily.items()), columns=['PULocationID', 'pred_trip_count'])
+        heatmap_data = self.nyc_zones.merge(pred_df, left_on='location_id', right_on='PULocationID', how='left')
+
         fig, ax = plt.subplots(1, 1, figsize=(10, 8))
-        heatmap_data.plot(column='pred_trip_count', cmap='Reds', linewidth=0.8, 
-                          edgecolor='black', legend=True, ax=ax)
-        plt.title("Predicted Average Daily Taxi Pickups in NYC (2025)")
-        plt.savefig('zone_pickup_heatmap.png', dpi=300, bbox_inches='tight')
-        plt.show()
+        heatmap_data.plot(
+            column='pred_trip_count',      
+            cmap='Reds',                   
+            linewidth=0.8,                 
+            edgecolor='black',             
+            legend=True,                   
+            missing_kwds={'color': 'lightgrey'},
+            ax=ax                        
+        )
+        plt.title("Predicted Average Daily Taxi Pickups for 2025")
+        plt.savefig('predicted_demand_heatmap.png', dpi=300, bbox_inches='tight')
+        plt.show()       
 
     def run_pipeline(self):
         """Runs the entire forecasting pipeline"""
