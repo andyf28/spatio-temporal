@@ -5,7 +5,6 @@ import geopandas as gpd
 from data_load import DataLoader
 import os
 
-
 """
 The heatmap represents the average number of rides per hour for each day of the week over the entire period covered by the data 
 (Jan - November 2024)
@@ -16,13 +15,13 @@ class WeeklyDemandVisualiser:
         self.processed_data = None
 
     def process_weekly_demand(self):
-        # convert to datetime and extract components
+        # converts to datetime and extract components
         dt = pd.to_datetime(self.df['tpep_pickup_datetime'])
         self.df['day_of_week'] = dt.dt.dayofweek
         self.df['hour'] = dt.dt.hour
         self.df['date'] = dt.dt.date
 
-        # first group by date, day_of_week, and hour to get counts per specific day
+        # group by date, day_of_week, and hour to get counts per specific day,
         # then calculate the mean for each day_of_week and hour combination
         weekly_demand = (self.df.groupby(['date', 'day_of_week', 'hour'])
                         .size()
@@ -33,14 +32,13 @@ class WeeklyDemandVisualiser:
         
         weekly_demand.columns = ['Day', 'Hour', 'Demand']
 
-        # reshape data for heatmap
+        # reshapes data for heatmap
         self.processed_data = weekly_demand.pivot(
             index='Day',
             columns='Hour',
             values='Demand'
         )
 
-        # set day names for better readability
         day_names = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
         self.processed_data.index = day_names
         return self
@@ -61,7 +59,6 @@ class WeeklyDemandVisualiser:
         plt.ylabel('Day of Week')
         
         if save_path:
-            # create plots directory if it doesn't exist
             os.makedirs(os.path.dirname(save_path), exist_ok=True)
             plt.savefig(save_path, bbox_inches='tight', dpi=300)
             
@@ -70,23 +67,22 @@ class WeeklyDemandVisualiser:
 """
 Pickup zone count heatmap
 """
-
 class PUTaxiZoneVisualiser:
     def __init__(self, df):
         self.df = df
         self.processed_data = None
 
     def process_zone_data(self):
-        # Calculate the number of unique days in the dataset
+        # calcs number of unique days in dataset
         num_days = len(pd.to_datetime(self.df['tpep_pickup_datetime']).dt.date.unique())
         
-        # counts pickups per zone and creates gdf
+        # counts pickups per zone
         zone_counts = self.df.groupby('PULocationID').size().reset_index(name='pickup_count')
-        # Convert to average daily pickups
+        # converts to avg daily pickups
         zone_counts['pickup_count'] = zone_counts['pickup_count'] / num_days
         zone_counts['PULocationID'] = zone_counts['PULocationID'].astype(str)
         
-        # creates gdf using existing geometry
+        # creates gdf 
         geometry_df = self.df[['PULocationID', 'PUjson']].drop_duplicates()
         self.processed_data = gpd.GeoDataFrame(
             geometry_df.merge(zone_counts, on='PULocationID', how='left'),
@@ -101,13 +97,13 @@ class PUTaxiZoneVisualiser:
 
         fig, ax = plt.subplots(1, 1, figsize=(15, 10))
         
-        # plot choropleth
+        # plots heatmap
         self.processed_data.plot(
             column='pickup_count',
             ax=ax,
             legend=True,
             legend_kwds={'label': 'Average Daily Pickups'},
-            cmap='cividis'
+            cmap='Reds'
         )
         
         plt.title(title)
@@ -128,16 +124,16 @@ class DOTaxiZoneVisualizer:
         self.processed_data = None
 
     def process_zone_data(self):
-        # calculates the number of unique days in the dataset
-        num_days = len(pd.to_datetime(self.df['tpep_pickup_datetime']).dt.data.uniquie())
+        # calcs number of unique days in dataset
+        num_days = len(pd.to_datetime(self.df['tpep_pickup_datetime']).dt.date.unique())
 
-        # counts pikcups per one and creates gdf
+        # counts dropoffs per zone
         zone_counts = self.df.groupby('DOLocationID').size().reset_index(name='dropoff_count')
-        # converts to average daily pickups
-        zone_counts['drop'] = zone_counts['dropoff_count'] / num_days
+        # converts to avg daily dropoffs
+        zone_counts['dropoff_count'] = zone_counts['dropoff_count'] / num_days
         zone_counts['DOLocationID'] = zone_counts['DOLocationID'].astype(str)
         
-        # Create GeoDataFrame using existing geometry
+        # creates gdf
         geometry_df = self.df[['DOLocationID', 'DOjson']].drop_duplicates()
         self.processed_data = gpd.GeoDataFrame(
             geometry_df.merge(zone_counts, on='DOLocationID', how='left'),
@@ -146,19 +142,19 @@ class DOTaxiZoneVisualizer:
         self.processed_data['dropoff_count'] = self.processed_data['dropoff_count'].fillna(0)
         return self
 
-    def plot_zone_heatmap(self, title="Total Taxi Dropoffs by Zone (2024)", save_path=None):
+    def plot_zone_heatmap(self, title="Average Daily Taxi Dropoffs by Zone (2024)", save_path=None):
         if self.processed_data is None:
             raise ValueError("Process data first")
 
         fig, ax = plt.subplots(1, 1, figsize=(15, 10))
         
-        # Plot choropleth
+        # plots heatmap
         self.processed_data.plot(
             column='dropoff_count',
             ax=ax,
             legend=True,
-            legend_kwds={'label': 'Number of Dropoffs'},
-            cmap='cividis'
+            legend_kwds={'label': 'Average Daily Dropoffs'},
+            cmap='Reds'
         )
         
         plt.title(title)
@@ -171,16 +167,15 @@ class DOTaxiZoneVisualizer:
         return plt
 
 def main():
-    # setup data loading
+    # data load
     file_paths = [f"./Parquet/yellow_tripdata_2024-{str(i).zfill(2)}.parquet" for i in range(1, 12)]
     geojson_path = "./tlc_taxi_zones.geojson"
     
-    # load data using DataLoader
     data_loader = DataLoader(file_paths, geojson_path)
     df = data_loader.get_dataframe()
     
-########################### UNCOMMENT WHICH MAP YOU WANT ###########################
-     
+    ########################### UNCOMMENT WHICH MAP YOU WANT ###########################
+    
     # create weekly demand heatmap
     #weekly_visualiser = WeeklyDemandVisualiser(df)
     #weekly_visualiser.process_weekly_demand()
@@ -193,7 +188,7 @@ def main():
     plt_zone = zone_visualiser.plot_zone_heatmap(save_path='./plots/zone_pickup_heatmap.png')
     plt_zone.show()
 
-    # Create dropoffs zone heatmap
+    # create dropoffs zone heatmap
     #dropoff_visualizer = DOTaxiZoneVisualizer(df)
     #dropoff_visualizer.process_zone_data()
     #plt_dropoff = dropoff_visualizer.plot_zone_heatmap(save_path='./plots/zone_dropoff_heatmap.png')
