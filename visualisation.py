@@ -177,16 +177,16 @@ def main():
     ########################### UNCOMMENT WHICH MAP YOU WANT ###########################
     
     # create weekly demand heatmap
-    #weekly_visualiser = WeeklyDemandVisualiser(df)
-    #weekly_visualiser.process_weekly_demand()
-    #plt_weekly = weekly_visualiser.plot_heatmap(save_path='./plots/hourly_demand_heatmap.png')
-    #plt_weekly.show()
+    weekly_visualiser = WeeklyDemandVisualiser(df)
+    weekly_visualiser.process_weekly_demand()
+    plt_weekly = weekly_visualiser.plot_heatmap(save_path='./plots/hourly_demand_heatmap.png')
+    plt_weekly.show()
     
     # create pickups zone heatmap 
-    zone_visualiser = PUTaxiZoneVisualiser(df) 
-    zone_visualiser.process_zone_data()
-    plt_zone = zone_visualiser.plot_zone_heatmap(save_path='./plots/zone_pickup_heatmap.png')
-    plt_zone.show()
+    #zone_visualiser = PUTaxiZoneVisualiser(df) 
+    #zone_visualiser.process_zone_data()
+    #plt_zone = zone_visualiser.plot_zone_heatmap(save_path='./plots/zone_pickup_heatmap.png')
+    #plt_zone.show()
 
     # create dropoffs zone heatmap
     #dropoff_visualizer = DOTaxiZoneVisualizer(df)
