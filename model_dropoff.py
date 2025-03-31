@@ -259,7 +259,7 @@ class TaxiDemandForecast:
         
         pred_df = pd.DataFrame(predictions)
         
-        csv_path = 'predicted_taxi_dropoffs_2025.csv'
+        csv_path = './outputs/predicted_taxi_dropoffs_2025.csv'
         pred_df.to_csv(csv_path, index=False)
         print(f"Predictions saved to {csv_path}")
         
@@ -272,7 +272,7 @@ class TaxiDemandForecast:
                         legend_kwds={'label': "Average Daily Dropoffs"})
         plt.title("Predicted Average Daily Taxi Dropoffs by Zone (2025)")
         plt.axis('off')
-        plt.savefig('zone_dropoff_heatmap_predicted.png', dpi=300, bbox_inches='tight')
+        plt.savefig('./plots/zone_dropoff_heatmap_predicted.png', dpi=300, bbox_inches='tight')
         plt.show()
 
 
