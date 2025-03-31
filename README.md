@@ -13,14 +13,15 @@ tqdm
 scikit-learn
 xgboost
 cupy
+python >= 3.12.8
 ```
 
 ### Data
 
-#### parquet files: 
+#### Parquet files: 
 - https://www.nyc.gov/site/tlc/about/tlc-trip-record-data.page
 
-#### geojson files:
+#### GeoJSON files:
 - https://www.kaggle.com/datasets/mxruedag/tlc-nyc-taxi-zones?resource=download
 
 
@@ -38,5 +39,6 @@ Run each file in the following order:
 3. model_pickup.py / model_dropoff.py
 ```
 
-The outputted plots from `visualisation.py` and `model_pickup.py / model_dropoff.py` will go into the `./plots` folder in the directory/
+The outputted plots from `visualisation.py` and `model_pickup.py / model_dropoff.py` will go into the `./plots` folder in the directory.
+
 The outputted predicted .csv files from the models will go into the `./outputs` folder in the directory.
