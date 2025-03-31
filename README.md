@@ -1,14 +1,42 @@
-# spatio-temporal
+# Using XGBoost to forecast future 2025 demand hotspots in NYC with taxi trip data
 
-### parquet files: 
-- https://liveuclac-my.sharepoint.com/:f:/r/personal/ucesfur_ucl_ac_uk/Documents/Parquet?csf=1&web=1&e=R4M0Wl
+## Reproduction Instructions
 
-### geojson files:
+### Required Libraries
+
+```
+geopandas
+pandas 
+matplotlib
+numpy
+tqdm
+scikit-learn
+xgboost
+cupy
+```
+
+### Data
+
+#### parquet files: 
+- https://www.nyc.gov/site/tlc/about/tlc-trip-record-data.page
+
+#### geojson files:
 - https://www.kaggle.com/datasets/mxruedag/tlc-nyc-taxi-zones?resource=download
 
-TODO: filter geojson to load in only manhattan zones, and predict for pickup and drop off locations. do some temporal heatmaps and heatmaps for predicted data
 
-Manhattan tlc zones reference: https://www.researchgate.net/figure/Taxi-zone-division-of-Manhattan-by-taxi-and-limousine-commission-of-New-York-City-We_fig2_351834141
+#### Step 1: 
 
+Clone the repository. It contains the necessary .parquet and geojson file for the assignment. If the code throws any errors, the data can be found in the links above. The NYC TLC Taxi Trip data is from 1st January - 30th November 2024.
 
-TODO: reference the code for xgboost
+#### Step 2:
+
+Run each file in the following order:
+
+```
+1. data_load.py
+2. visualisation.py
+3. model_pickup.py / model_dropoff.py
+```
+
+The outputted plots from `visualisation.py` and `model_pickup.py / model_dropoff.py` will go into the `./plots` folder in the directory/
+The outputted predicted .csv files from the models will go into the `./outputs` folder in the directory.
