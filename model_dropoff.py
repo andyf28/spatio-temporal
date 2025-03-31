@@ -59,6 +59,7 @@ class TaxiDemandForecast:
         Aggregates trips by hour and location
         """
 
+        # aggregrates by day and loc
         print("Aggregating data...")
         with tqdm(total=1, desc="Aggregating trips") as pbar:
             self.df = self.df.groupby([self.df['tpep_dropoff_datetime'].dt.date, 'DOLocationID'])\
@@ -76,12 +77,12 @@ class TaxiDemandForecast:
             self.df['is_weekend'] = (self.df['dayofweek'] >= 5).astype(int)
             pbar.update(1)
 
-            # Calculate mean trip count per location to use for imputation
+            # calculate mean trip count per location to use for imputation
             location_means = self.df.groupby('DOLocationID')['trip_count'].mean().to_dict()
             
             self.df['trip_count_lag1'] = self.df.groupby('DOLocationID')['trip_count'].shift(1)
             self.df['trip_count_lag7'] = self.df.groupby('DOLocationID')['trip_count'].shift(7)
-            # Impute missing lag values with the location's mean
+            # impute missing lag values with the location's mean
             self.df['trip_count_lag1'] = self.df.apply(
                 lambda row: location_means.get(row['DOLocationID'], 0) if pd.isna(row['trip_count_lag1']) else row['trip_count_lag1'], axis=1)
             self.df['trip_count_lag7'] = self.df.apply(
@@ -90,7 +91,7 @@ class TaxiDemandForecast:
 
             self.df['rolling_avg'] = self.df.groupby('DOLocationID')['trip_count']\
                 .rolling(window=7).mean().reset_index(0, drop=True)
-            # Impute missing rolling averages with the location's mean
+            # impute missing rolling averages with the location's mean
             self.df['rolling_avg'] = self.df.apply(
                 lambda row: location_means.get(row['DOLocationID'], 0) if pd.isna(row['rolling_avg']) else row['rolling_avg'], axis=1)
             pbar.update(1)
@@ -109,6 +110,7 @@ class TaxiDemandForecast:
         val_end = '2024-11-15'
         test_end = '2024-11-30'
 
+        # sets split end dates
         train = self.df[self.df['tpep_dropoff_datetime'] < train_end]
         val = self.df[(self.df['tpep_dropoff_datetime'] >= train_end) & 
                       (self.df['tpep_dropoff_datetime'] < val_end)]
@@ -155,6 +157,7 @@ class TaxiDemandForecast:
         Trains an XGBoost model with early stopping using CuPy arrays
         """
 
+        # hyperparameters
         print("Training XGBoost model...")
         self.model = xgb.XGBRegressor(
             objective="reg:squarederror",
@@ -191,6 +194,7 @@ class TaxiDemandForecast:
         y_test_np = cp.asnumpy(self.y_test)
         y_pred = self.model.predict(cp.asnumpy(self.X_test))
         
+        # model evals
         mae = mean_absolute_error(y_test_np, y_pred)
         rmse = mean_squared_error(y_test_np, y_pred) ** 0.5
         print(f"Mean Absolute Error (MAE): {mae:.2f}")
@@ -231,7 +235,7 @@ class TaxiDemandForecast:
                 lag7 = trip_counts[-7] if len(trip_counts) >= 7 else historical_means.get(loc, 0)
                 rolling_avg = sum(trip_counts[-7:]) / 7 if len(trip_counts) >= 7 else historical_means.get(loc, 0)
                 
-                # Construct feature vector matching training data
+                # construct feature vector matching training data
                 feature_dict = {
                     'dayofweek': dayofweek,
                     'month': month,
@@ -240,15 +244,15 @@ class TaxiDemandForecast:
                     'trip_count_lag7': lag7,
                     'rolling_avg': rolling_avg
                 }
-                # Add one-hot encoded location features
+                # adds one-hot encoded location features
                 for col in self.feature_columns:
                     if col.startswith('loc_'):
                         feature_dict[col] = 1 if col == f'loc_{loc}' else 0
                 
-                # Convert to array in the correct order
+                # converts to array in the correct order
                 feature_vector = [feature_dict[col] for col in self.feature_columns]
                 
-                # Use CuPy for conversion and prediction
+                # uses cupy for conversion and prediction
                 feature_gpu = cp.asarray(feature_vector, dtype=cp.float32).reshape(1, -1)
                 pred = self.model.predict(cp.asnumpy(feature_gpu))[0]
                 trip_counts.append(pred)
@@ -265,6 +269,7 @@ class TaxiDemandForecast:
         
         heatmap_data = self.nyc_zones.merge(pred_df, left_on='location_id', right_on='DOLocationID')
         
+        # plot
         fig, ax = plt.subplots(1, 1, figsize=(10, 8))
         heatmap_data.plot(column='pred_trip_count', cmap='Reds', linewidth=0.8, 
                         edgecolor='black', legend=True, ax=ax, 
