@@ -1,4 +1,4 @@
-# Using XGBoost to forecast future 2025 demand hotspots in NYC with taxi trip data
+# Using XGBoost to Forecast Future 2025 Taxi Demand Hotspots in New York City with TLC Taxi Trip Data
 
 ## Reproduction Instructions
 
