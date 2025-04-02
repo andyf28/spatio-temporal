@@ -9,6 +9,7 @@ geopandas
 pandas 
 matplotlib
 numpy
+seaborn
 tqdm
 scikit-learn
 xgboost
@@ -38,6 +39,8 @@ Run each file in the following order:
 2. visualisation.py
 3. model_pickup.py / model_dropoff.py
 ```
+
+The `data_load.py` allows the user to input which plot they want to produce. Make sure to type it correctly as specified in the console.
 
 The outputted plots from `visualisation.py` and `model_pickup.py / model_dropoff.py` will go into the `./plots` folder in the directory.
 
