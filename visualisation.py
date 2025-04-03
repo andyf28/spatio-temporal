@@ -314,7 +314,7 @@ class FlowMapVisualiser:
         fig, ax = plt.subplots(1, 1, figsize = (15, 15))
 
         # plots zone boundaries as base map
-        self.zone_gdf.plot(ax=ax, color='lightgrey', edgecolor='black', alpha=0.5)
+        self.zone_gdf.plot(ax=ax, color='whitesmoke', edgecolor='black', alpha=0.5)
 
         # prepares data for LineCollection
         lines = [list(line.coords) for line in self.processed_data.geometry]
@@ -323,8 +323,8 @@ class FlowMapVisualiser:
 
         # Create LineCollection with color mapping
         norm = Normalize(vmin=trip_counts.min(), vmax=trip_counts.max())
-        cmap = plt.cm.cividis
-        line_collection = LineCollection(lines, linewidths=linewidths, colors=cmap(norm(trip_counts)), alpha=0.5)
+        cmap = plt.cm.plasma
+        line_collection = LineCollection(lines, linewidths=linewidths, colors=cmap(norm(trip_counts)), alpha=0.7)
         ax.add_collection(line_collection)
 
         # add colorbar
@@ -396,7 +396,7 @@ def main():
     elif choice in ["flow map", "4"]:
         print("Plotting Flow Map...")
         flow_map_visualiser = FlowMapVisualiser(df)
-        flow_map_visualiser.process_flow_data(top_n = 100, min_trips = 45000)
+        flow_map_visualiser.process_flow_data(top_n = 200, min_trips = 30000)
         save_path = './plots/flow_map.png'
         plt_flow = flow_map_visualiser.plot_flow_map(save_path = save_path)
         plt_flow.show()
